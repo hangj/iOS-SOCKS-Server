@@ -92,7 +92,7 @@ logging.basicConfig(level=logging.DEBUG)
 SOCKS_VERSION = 5
 SOCKS_HOST = '0.0.0.0'
 SOCKS_PORT = 9876
-WPAD_PORT = 80
+WPAD_PORT = 8080
 
 
 class ThreadingTCPServer(ThreadingMixIn, TCPServer):
@@ -373,10 +373,21 @@ def create_wpad_server(hhost, hport, phost, pport):
             s.end_headers()
 
         def do_GET(s):
+            pac = None
+            try:
+                with open('proxy.pac') as f:
+                    import re
+                    pac = f.read()
+                    pac = re.sub('SOCKS5.*?DIRECT', f'SOCKS5 {phost}:{pport}; SOCKS {phost}:{pport}; DIRECT', pac)
+            except Exception as e:
+                pass
             s.send_response(200)
             s.send_header("Content-type", "application/x-ns-proxy-autoconfig")
             s.end_headers()
-            s.wfile.write(("""
+            if pac:
+                s.wfile.write(pac.encode())
+            else:
+                s.wfile.write(("""
 function FindProxyForURL(url, host)
 {
    if (isInNet(host, "192.168.0.0", "255.255.0.0")) {
@@ -404,11 +415,9 @@ def run_wpad_server(server):
 
 
 if __name__ == '__main__':
-    wpad_server = create_wpad_server(
-        SOCKS_HOST, WPAD_PORT, PROXY_HOST, SOCKS_PORT
-    )
+    wpad_server = create_wpad_server(SOCKS_HOST, WPAD_PORT, PROXY_HOST, SOCKS_PORT)
 
-    print("PAC URL: http://{}:{}/wpad.dat".format(PROXY_HOST, WPAD_PORT))
+    print("PAC URL: http://{}:{}/proxy.pac".format(PROXY_HOST, WPAD_PORT))
     print("SOCKS Address: {}:{}".format(PROXY_HOST or SOCKS_HOST, SOCKS_PORT))
 
     thread = threading.Thread(target=run_wpad_server, args=(wpad_server,))
