@@ -386,7 +386,7 @@ function FindProxyForURL(url, host)
    } else if (isInNet(host, "10.0.0.0", "255.0.0.0")) {
       return "DIRECT";
    } else {
-      return "SOCKS5 %s:%d; SOCKS %s:%d";
+      return "SOCKS5 %s:%d; SOCKS %s:%d; DIRECT;";
    }
 }
 """ % (phost, pport, phost, pport)).lstrip().encode())
