@@ -77,7 +77,7 @@ def error(msg="", err=None):
     """ Print exception stack trace python """
     if msg:
         traceback.print_exc()
-        print("{} - Code: {}, Message: {}".format(msg, str(err[0]), err[1]))
+        print(f"{msg} - err: {err}")
     else:
         traceback.print_exc()
 
