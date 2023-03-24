@@ -9,6 +9,8 @@
  https://www.rfc-editor.org/rfc/rfc1928.html
 """
 
+URL_GFW_LIST = "https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt"
+
 # Network
 import socket
 import select
@@ -311,6 +313,15 @@ def exit_handler(signum, frame):
 
 def create_wpad_server(hhost, hport, phost, pport):
     from http.server import BaseHTTPRequestHandler, HTTPServer
+    import base64
+    import requests
+
+    rules = None
+    r = requests.get(URL_GFW_LIST)
+    if r.ok:
+        text = base64.b64decode(r.text).decode()
+        text = '","'.join(text.split('\n'))
+        rules = f'var rules = ["{text}"];'
 
     class HTTPHandler(BaseHTTPRequestHandler):
         def do_HEAD(s):
@@ -324,13 +335,15 @@ def create_wpad_server(hhost, hport, phost, pport):
                 with open('proxy.pac') as f:
                     import re
                     pac = f.read()
-                    pac = re.sub('SOCKS5.*?DIRECT', f'SOCKS5 {phost}:{pport}; SOCKS {phost}:{pport}; DIRECT', pac)
+                    # pac = re.sub('SOCKS5.*?DIRECT', f'SOCKS5 {phost}:{pport}; SOCKS {phost}:{pport}; DIRECT', pac)
             except Exception as e:
                 pass
             s.send_response(200)
             s.send_header("Content-type", "application/x-ns-proxy-autoconfig")
             s.end_headers()
-            if pac:
+            if pac and rules:
+                s.wfile.write(f'var proxy = "SOCKS5 {phost}:{pport}; SOCKS {phost}:{pport}; DIRECT;";'.encode())
+                s.wfile.write(rules.encode())
                 s.wfile.write(pac.encode())
             else:
                 s.wfile.write(("""
