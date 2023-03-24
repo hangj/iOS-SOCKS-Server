@@ -77,7 +77,7 @@ def error(msg="", err=None):
     """ Print exception stack trace python """
     if msg:
         traceback.print_exc()
-        print(f"{msg} - err: {err}")
+        print(f"{msg} - err: {err}", file=sys.stderr)
     else:
         traceback.print_exc()
 
@@ -117,7 +117,7 @@ def connect_to_dst(dst_addr, dst_port):
                 OUTGOING_INTERFACE.encode(),
             )
         except PermissionError as err:
-            print("Only root can set OUTGOING_INTERFACE parameter")
+            print(f"Only root can set OUTGOING_INTERFACE parameter: {err}", file=sys.stderr)
             EXIT.set_status(True)
     try:
         sock.connect((dst_addr, dst_port))
