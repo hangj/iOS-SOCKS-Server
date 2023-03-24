@@ -361,14 +361,17 @@ def run_wpad_server(server):
 
 
 def main():
+    PROXY_HOST = "172.20.10.1"
+    SOCKS_HOST = "0.0.0.0"
+    WPAD_PORT = 8080
     wpad_server = create_wpad_server(
-        SOCKS_HOST, WPAD_PORT, PROXY_HOST, SOCKS_PORT
+        SOCKS_HOST, WPAD_PORT, PROXY_HOST, LOCAL_PORT
     )
 
     print("PAC URL: http://{}:{}/proxy.pac".format(PROXY_HOST, WPAD_PORT))
-    print("SOCKS Address: {}:{}".format(PROXY_HOST or SOCKS_HOST, SOCKS_PORT))
+    print("SOCKS Address: {}:{}".format(PROXY_HOST or SOCKS_HOST, LOCAL_PORT))
 
-    thread = threading.Thread(target=run_wpad_server, args=(wpad_server,))
+    thread = Thread(target=run_wpad_server, args=(wpad_server,))
     thread.daemon = True
     thread.start()
 
