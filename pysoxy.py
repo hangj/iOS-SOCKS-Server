@@ -174,6 +174,7 @@ def request(wrapper):
         returns a reply
     """
     dst = request_client(wrapper)
+    socket_dst = 0
     # Server Reply
     # +----+-----+-------+------+----------+----------+
     # |VER | REP |  RSV  | ATYP | BND.ADDR | BND.PORT |
