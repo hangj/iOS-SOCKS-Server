@@ -320,8 +320,8 @@ def create_wpad_server(hhost, hport, phost, pport):
     r = requests.get(URL_GFW_LIST)
     if r.ok:
         text = base64.b64decode(r.text).decode()
-        text = '","'.join(text.split('\n'))
-        rules = f'var rules = ["{text}"];'
+        text = '",\n"'.join(text.split('\n'))
+        rules = f'var rules = [\n"{text}"\n];\n'
 
     class HTTPHandler(BaseHTTPRequestHandler):
         def do_HEAD(s):
@@ -342,7 +342,7 @@ def create_wpad_server(hhost, hport, phost, pport):
             s.send_header("Content-type", "application/x-ns-proxy-autoconfig")
             s.end_headers()
             if pac and rules:
-                s.wfile.write(f'var proxy = "SOCKS5 {phost}:{pport}; SOCKS {phost}:{pport}; DIRECT;";'.encode())
+                s.wfile.write(f'var proxy = "SOCKS5 {phost}:{pport}; SOCKS {phost}:{pport}; DIRECT;";\n'.encode())
                 s.wfile.write(rules.encode())
                 s.wfile.write(pac.encode())
             else:
