@@ -345,7 +345,7 @@ def create_wpad_server(hhost, hport, phost, pport):
             s.end_headers()
             if pac and rules:
                 s.wfile.write(f'var proxy = "SOCKS5 {phost}:{pport}; SOCKS {phost}:{pport}; DIRECT;";\n'.encode())
-                s.wfile.write(rules.encode())
+                # s.wfile.write(rules.encode())
                 s.wfile.write(pac.encode())
             else:
                 s.wfile.write(("""
