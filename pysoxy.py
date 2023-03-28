@@ -320,7 +320,9 @@ def create_wpad_server(hhost, hport, phost, pport):
     r = requests.get(URL_GFW_LIST)
     if r.ok:
         text = base64.b64decode(r.text).decode()
-        text = '",\n"'.join(text.split('\n'))
+        arr = text.split('\n')
+        it = filter(lambda x: x, arr) # filter empty lines
+        text = '",\n"'.join(it)
         rules = f'var rules = [\n"{text}"\n];\n'
 
     class HTTPHandler(BaseHTTPRequestHandler):
