@@ -342,7 +342,7 @@ def create_wpad_server(hhost, hport, phost, pport):
         import http.client
         import re
 
-        m = re.match('https://(.*)/', URL_GFW_LIST)
+        m = re.match('https://(.*?)/', URL_GFW_LIST)
         host = m.groups()[0]
         conn = http.client.HTTPSConnection(host)
         conn.request("GET", URL_GFW_LIST)
@@ -356,7 +356,8 @@ def create_wpad_server(hhost, hport, phost, pport):
         next(it) # ignore the first line
         text = '",\n"'.join(it)
         rules = f'var rules = [\n"{text}"\n];\n'
-    except:
+    except Exception as e:
+        print('get gfwlist error:', e, file=sys.stderr)
         pass
 
 
@@ -384,16 +385,19 @@ def create_wpad_server(hhost, hport, phost, pport):
                     pac = f.read()
                     # pac = re.sub('SOCKS5.*?DIRECT', f'SOCKS5 {phost}:{pport}; SOCKS {phost}:{pport}; DIRECT', pac)
             except Exception as e:
+                print('open proxy.pac error:', e, file=sys.stderr)
                 pass
             s.send_response(200)
             s.send_header("Content-type", "application/x-ns-proxy-autoconfig")
             s.end_headers()
-            if pac and rules:
-                s.wfile.write(f'var proxy = "SOCKS5 {phost}:{pport}; SOCKS {phost}:{pport}; DIRECT;";\n'.encode())
+
+            s.wfile.write(f'var proxy = "SOCKS5 {phost}:{pport}; SOCKS {phost}:{pport}; DIRECT;";\n'.encode())
+            if rules:
                 s.wfile.write(rules.encode())
+            if pac:
                 s.wfile.write(pac.encode())
             else:
-                s.wfile.write(("""
+                s.wfile.write("""
 function FindProxyForURL(url, host)
 {
    if (isInNet(host, "192.168.0.0", "255.255.0.0")) {
@@ -405,9 +409,9 @@ function FindProxyForURL(url, host)
    if (isInNet(host, "10.0.0.0", "255.0.0.0")) {
       return "DIRECT";
    }
-   return "SOCKS5 %s:%d; SOCKS %s:%d; DIRECT;";
+   return proxy;
 }
-""" % (phost, pport, phost, pport)).lstrip().encode())
+""".encode())
 
     HTTPServer.allow_reuse_address = True
     server = HTTPServer((hhost, hport), HTTPHandler)
