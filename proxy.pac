@@ -4,7 +4,7 @@
 // var proxy = "SOCKS5 172.20.10.1:9050; SOCKS 172.20.10.1:9050; DIRECT;";
 
 // https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt
-var rules = [
+if (typeof rules == "undefined") var rules = [
   "||openai.com",
   "||wework.com",
   "tumblr.com",

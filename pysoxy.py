@@ -183,6 +183,26 @@ def request(wrapper):
     # +----+-----+-------+------+----------+----------+
     # | 1  |  1  | X'00' |  1   | Variable |    2     |
     # +----+-----+-------+------+----------+----------+
+    # o  VER    protocol version: X'05'
+    # o  REP    Reply field:
+    #     o  X'00' succeeded
+    #     o  X'01' general SOCKS server failure
+    #     o  X'02' connection not allowed by ruleset
+    #     o  X'03' Network unreachable
+    #     o  X'04' Host unreachable
+    #     o  X'05' Connection refused
+    #     o  X'06' TTL expired
+    #     o  X'07' Command not supported
+    #     o  X'08' Address type not supported
+    #     o  X'09' to X'FF' unassigned
+    # o  RSV    RESERVED
+    # o  ATYP   address type of following address
+    #     o  IP V4 address: X'01'
+    #        o  DOMAINNAME: X'03'
+    #        o  IP V6 address: X'04'
+    # o  BND.ADDR       server bound address
+    # o  BND.PORT       server bound port in network octet order
+
     rep = b'\x07'
     bnd = b'\x00' + b'\x00' + b'\x00' + b'\x00' + b'\x00' + b'\x00'
     if dst:
@@ -321,7 +341,9 @@ def create_wpad_server(hhost, hport, phost, pport):
     if r.ok:
         text = base64.b64decode(r.text).decode()
         arr = text.split('\n')
+        arr.append(f"@@||{phost}")
         it = filter(lambda x: x, arr) # filter empty lines
+        next(it) # ignore the first line
         text = '",\n"'.join(it)
         rules = f'var rules = [\n"{text}"\n];\n'
 
@@ -345,7 +367,7 @@ def create_wpad_server(hhost, hport, phost, pport):
             s.end_headers()
             if pac and rules:
                 s.wfile.write(f'var proxy = "SOCKS5 {phost}:{pport}; SOCKS {phost}:{pport}; DIRECT;";\n'.encode())
-                # s.wfile.write(rules.encode())
+                s.wfile.write(rules.encode())
                 s.wfile.write(pac.encode())
             else:
                 s.wfile.write(("""
@@ -353,15 +375,16 @@ function FindProxyForURL(url, host)
 {
    if (isInNet(host, "192.168.0.0", "255.255.0.0")) {
       return "DIRECT";
-   } else if (isInNet(host, "172.16.0.0", "255.240.0.0")) {
-      return "DIRECT";
-   } else if (isInNet(host, "10.0.0.0", "255.0.0.0")) {
-      return "DIRECT";
-   } else {
-      return "SOCKS5 %s:%d; SOCKS %s:%d; DIRECT;";
    }
+   if (isInNet(host, "172.16.0.0", "255.240.0.0")) {
+      return "DIRECT";
+   }
+   if (isInNet(host, "10.0.0.0", "255.0.0.0")) {
+      return "DIRECT";
+   }
+   return "SOCKS5 %s:%d; SOCKS %s:%d; DIRECT;";
 }
-""" % (phost, pport, phost, pport)).lstrip().encode())
+""" % (phost, phost, pport, phost, pport)).lstrip().encode())
 
     HTTPServer.allow_reuse_address = True
     server = HTTPServer((hhost, hport), HTTPHandler)
