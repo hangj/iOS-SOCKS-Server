@@ -407,7 +407,7 @@ function FindProxyForURL(url, host)
    }
    return "SOCKS5 %s:%d; SOCKS %s:%d; DIRECT;";
 }
-""" % (phost, phost, pport, phost, pport)).lstrip().encode())
+""" % (phost, pport, phost, pport)).lstrip().encode())
 
     HTTPServer.allow_reuse_address = True
     server = HTTPServer((hhost, hport), HTTPHandler)
