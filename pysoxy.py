@@ -334,7 +334,7 @@ def exit_handler(signum, frame):
 def create_wpad_server(hhost, hport, phost, pport):
     from http.server import BaseHTTPRequestHandler, HTTPServer
     import base64
-    # import requests
+
 
     rules = None
 
@@ -359,17 +359,6 @@ def create_wpad_server(hhost, hport, phost, pport):
     except Exception as e:
         print('get gfwlist error:', e, file=sys.stderr)
         pass
-
-
-    # r = requests.get(URL_GFW_LIST)
-    # if r.ok:
-    #     text = base64.b64decode(r.text).decode()
-    #     arr = text.split('\n')
-    #     arr.append(f"@@||{phost}")
-    #     it = filter(lambda x: x, arr) # filter empty lines
-    #     next(it) # ignore the first line
-    #     text = '",\n"'.join(it)
-    #     rules = f'var rules = [\n"{text}"\n];\n'
 
     class HTTPHandler(BaseHTTPRequestHandler):
         def do_HEAD(s):
