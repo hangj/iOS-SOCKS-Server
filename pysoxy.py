@@ -123,6 +123,7 @@ def connect_to_dst(dst_addr, dst_port):
             EXIT.set_status(True)
     try:
         sock.connect((dst_addr, dst_port))
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         return sock
     except socket.error as err:
         error("Failed to connect to DST", err)
@@ -310,6 +311,7 @@ def bind_port(sock):
     try:
         print('Bind {}'.format(str(LOCAL_PORT)))
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         sock.bind((LOCAL_ADDR, LOCAL_PORT))
     except socket.error as err:
         error("Bind failed", err)
